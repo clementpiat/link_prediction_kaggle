@@ -6,6 +6,11 @@ from tqdm import tqdm
 from gensim.models import Word2Vec
 import os
 
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score, accuracy_score
+from sklearn.neural_network import MLPClassifier
+
 rd.seed(0)
 
 def load_data(ratio_pairs_vw = 0.8):
@@ -31,6 +36,7 @@ def load_data(ratio_pairs_vw = 0.8):
     for row in tqdm(np.array(train_df)):
         if row[2] and rd.random() < ratio_pairs_vw:
             G_vw.add_edge(row[0], row[1])
+            G_vw.add_edge(row[1], row[0])
         elif unbalanced_count or row[2]:
             classif_edges.append(row)
             unbalanced_count += (row[2]*2 - 1) 
@@ -65,14 +71,16 @@ def get_word_vectors():
         # Perform random walks - call function
         walks = perform_random_walks(G_vw, num_of_walks, walk_length)
         # Learn representations of nodes - use Word2Vec
-        model = Word2Vec(walks, size=embedding_size, window=window_size)
+        model = Word2Vec(walks, size=embedding_size, window=window_size, workers=4, min_count=1)
         # Save the embedding vectors
+        assert len(model.wv.vocab) == 27770
         model.save(output_filename)
         return model.wv
 
-num_of_walks=10
+train_size = 0.7
+num_of_walks=20
 walk_length=10
-embedding_size=64 
+embedding_size=512
 window_size=5
 output_filename="./word2vec.model"
 
@@ -80,3 +88,21 @@ output_filename="./word2vec.model"
 # Load data
 G_vw, classif_edges = load_data()
 wv = get_word_vectors()
+
+# Train a model
+def get_X(arr):
+    return np.array([wv[str(row[0])] + wv[str(row[1])] for row in arr])
+
+train, val = train_test_split(classif_edges, train_size=train_size, stratify=classif_edges[:,2])
+X_train, X_val = get_X(train), get_X(val)
+
+#clf = LogisticRegression(C=1, max_iter=500)
+clf = MLPClassifier(hidden_layer_sizes=(64,32), alpha=1e-2)
+clf.fit(X_train, train[:,2])
+prediction = clf.predict(X_val)
+
+print(f"Training F1: {f1_score(train[:,2], clf.predict(X_train))}")
+print(f"Training Accuracy: {accuracy_score(train[:,2], clf.predict(X_train))}")
+
+print(f"Validation F1: {f1_score(val[:,2], prediction)}")
+print(f"Validation Accuracy: {accuracy_score(val[:,2], prediction)}")
