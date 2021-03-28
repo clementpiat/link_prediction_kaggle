@@ -6,6 +6,7 @@ import numpy as np
 import networkx as nx
 from tqdm import tqdm
 import argparse
+from itertools import combinations
 
 #from sklearn.model_selection import train_test_split
 #from sklearn.linear_model import LogisticRegression
@@ -62,8 +63,17 @@ if __name__ == '__main__':
     graph, node_information, node_to_index, edge_df, test_edge_df = load_data()
 
     if args.author:
-        print('Loading author graph...')
-        graph = nx.read_gpickle("author_graph.gpickle")
+        print('Creating author graph...')
+        node_to_authors = {node: set(node_information.authors.values[node_to_index[node]].split(', ')) for node in node_information.node}
+
+        graph = nx.Graph()
+        for node in node_information.node:
+            graph.add_node(node)
+
+        for node1, node2 in tqdm(combinations(graph.nodes(), 2)):
+            if not node_to_authors[node1].isdisjoint(node_to_authors[node2]):
+                graph.add_edge(node1, node2)
+
         print('Loaded')
 
     for name, df in [('train', edge_df), ('test', test_edge_df)]:
