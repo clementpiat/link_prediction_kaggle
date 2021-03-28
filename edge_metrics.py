@@ -80,7 +80,7 @@ if __name__ == '__main__':
         metrics = np.array([
             all_metrics(graph, node1, node2) for node1, node2 in tqdm(list(zip(df.source.values, df.target.values)))])
 
-        with open(f'emb_edges_{name}/metrics.npy', 'wb') as f:
+        with open(f'emb_edges_{name}/{"author_" if args.author else ""}_metrics.npy', 'wb') as f:
             np.save(f, metrics)
 
 '''
