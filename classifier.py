@@ -23,7 +23,7 @@ if __name__ == '__main__':
     X = np.concatenate([np.load(f'emb_edges_train/{file}') for file in emb_edges_files], axis=1)
     X_test = np.concatenate([np.load(f'emb_edges_test/{file}') for file in emb_edges_files], axis=1)
     
-    emb_nodes_files = ['tfidf.npy']
+    emb_nodes_files = ['tfidf.npy', 'n2v.npy']
     X_nodes = np.concatenate([np.load(f'emb_nodes/{file}') for file in emb_nodes_files], axis=1)
 
     U, V = get_edges_lists(edge_df, node_information)
@@ -40,8 +40,8 @@ if __name__ == '__main__':
 
     print('Starting training...')
 
-    #clf = MLPClassifier(hidden_layer_sizes=(64,32), learning_rate_init=1e-5, alpha=1e-2, verbose=True)
-    clf = make_pipeline(StandardScaler(), SVC(gamma='auto', verbose=True))
+    clf = make_pipeline(StandardScaler(), MLPClassifier(hidden_layer_sizes=(64,64,32), learning_rate_init=5e-5, verbose=True, tol=3e-3))
+    #clf = make_pipeline(StandardScaler(), SVC(gamma='auto', verbose=True))
 
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_val)
