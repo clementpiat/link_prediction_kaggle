@@ -33,6 +33,6 @@ def load_data():
 
     node_to_index = {node: i for i, node in enumerate(node_information.node.values)}
 
-    print(f"{len(graph.nodes())} nodes, {len(graph.edges())} edges")
+    print(f"Loaded graph: {len(graph.nodes())} nodes, {len(graph.edges())} edges")
 
     return graph, node_information, node_to_index, edge_df, test_edge_df

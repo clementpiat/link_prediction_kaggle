@@ -30,7 +30,7 @@ vectorizer = TfidfVectorizer(strip_accents='unicode',
                         use_idf=True, smooth_idf=True, sublinear_tf=True, 
                         stop_words=token_stop, tokenizer=tokenizer)
 
-svd = TruncatedSVD(n_components=10, n_iter=10, random_state=42)
+svd = TruncatedSVD(n_components=32, n_iter=10, random_state=42)
 
 if __name__ == '__main__':
     node_information = load_node_information()

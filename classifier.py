@@ -8,40 +8,66 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+import argparse
 
 from utils import load_data, get_edges_lists
+
+ALL_EDGES_FILES = ['year.npy', 'share_journal.npy', 'metrics.npy', 'author_metrics.npy']
+ALL_NODES_FILES = ['tfidf.npy', 'n2v.npy']
 
 def abs_aggregator(x1, x2):
     return np.abs(x1 - x2)
 
-if __name__ == '__main__':
-    graph, node_information, node_to_index, edge_df, test_edge_df = load_data()
-
-    print('Concatenating all embeddings...')
-
-    emb_edges_files = ['year.npy', 'share_journal.npy', 'metrics.npy']
-    X = np.concatenate([np.load(f'emb_edges_train/{file}') for file in emb_edges_files], axis=1)
-    X_test = np.concatenate([np.load(f'emb_edges_test/{file}') for file in emb_edges_files], axis=1)
-    
-    emb_nodes_files = ['tfidf.npy', 'n2v.npy']
-    X_nodes = np.concatenate([np.load(f'emb_nodes/{file}') for file in emb_nodes_files], axis=1)
-
-    U, V = get_edges_lists(edge_df, node_information)
-    X = np.concatenate((X, abs_aggregator(X_nodes[U], X_nodes[V])), axis=1)
-
-    U, V = get_edges_lists(test_edge_df, node_information)
-    X_test = np.concatenate((X_test, abs_aggregator(X_nodes[U], X_nodes[V])), axis=1)
-
-    print('Embeddings loaded. Shape:', X.shape, '(train),', X_test.shape, '(test)')
+def load_embeddings(emb_edges_files = ALL_EDGES_FILES, emb_nodes_files = ALL_NODES_FILES):
+    _, node_information, node_to_index, edge_df, test_edge_df = load_data()
 
     y = edge_df.label.values
     y_test = test_edge_df.label.values
+
+    if emb_edges_files:
+        X = np.concatenate([np.load(f'emb_edges_train/{file}') for file in emb_edges_files], axis=1)
+        X_test = np.concatenate([np.load(f'emb_edges_test/{file}') for file in emb_edges_files], axis=1)
+
+        if not emb_nodes_files:
+            return X, X_test, y, y_test
+
+    X_nodes = np.concatenate([np.load(f'emb_nodes/{file}') for file in emb_nodes_files], axis=1)
+
+    U, V = get_edges_lists(edge_df, node_information)
+    X2 = abs_aggregator(X_nodes[U], X_nodes[V])
+
+    U, V = get_edges_lists(test_edge_df, node_information)
+    X2_test = abs_aggregator(X_nodes[U], X_nodes[V])
+
+    if not emb_edges_files:
+        return X2, X2_test, y, y_test
+
+    X = np.concatenate((X, X2), axis=1)
+    X_test = np.concatenate((X_test, X2_test), axis=1)
+ 
+    return X, X_test, y, y_test
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', '--emb_edges_files', nargs='*', default=ALL_EDGES_FILES)
+    parser.add_argument('-n', '--emb_nodes_files', nargs='*', default=ALL_NODES_FILES)
+    parser.add_argument('-c', '--classifier', type=str, default='mlp')
+    args = parser.parse_args()
+
+    X, X_test, y, y_test = load_embeddings(emb_edges_files=args.emb_edges_files,
+                                           emb_nodes_files=args.emb_nodes_files)
+    print('Embeddings loaded. Shape:', X.shape, '(train),', X_test.shape, '(test)') 
+
     X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, stratify=y)
 
     print('Starting training...')
 
-    clf = make_pipeline(StandardScaler(), MLPClassifier(hidden_layer_sizes=(64,64,32), learning_rate_init=5e-5, verbose=True, tol=3e-3))
-    #clf = make_pipeline(StandardScaler(), SVC(gamma='auto', verbose=True))
+    if args.classifier == 'mlp':
+        clf = make_pipeline(StandardScaler(), MLPClassifier(hidden_layer_sizes=(64,32), learning_rate_init=5e-5, verbose=True, tol=3e-3))
+    elif args.classifier == 'svc':
+        clf = make_pipeline(StandardScaler(), SVC(gamma='auto', verbose=True))
+    else:
+        raise ValueError(f"Invalid classifier name. Found {args.classifier}.")
 
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_val)
