@@ -12,7 +12,7 @@ from sklearn.svm import SVC
 from utils import load_data, get_edges_lists
 
 def abs_aggregator(x1, x2):
-    return np.abs(x1, x2)
+    return np.abs(x1 - x2)
 
 if __name__ == '__main__':
     graph, node_information, node_to_index, edge_df, test_edge_df = load_data()
