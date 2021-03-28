@@ -80,32 +80,33 @@ def get_word_vectors():
         model.save(output_filename)
         return model.wv
 
-train_size = 0.7
-num_of_walks=20
-walk_length=10
-embedding_size=512
-window_size=5
-output_filename="./word2vec.model"
+if __name__ == "__main__":
+    train_size = 0.7
+    num_of_walks=20
+    walk_length=10
+    embedding_size=512
+    window_size=5
+    output_filename="./word2vec.model"
 
 
-# Load data
-G_vw, classif_edges = load_data()
-wv = get_word_vectors()
+    # Load data
+    G_vw, classif_edges = load_data()
+    wv = get_word_vectors()
 
-# Train a model
-def get_X(arr):
-    return np.array([wv[str(row[0])] + wv[str(row[1])] for row in arr])
+    # Train a model
+    def get_X(arr):
+        return np.array([wv[str(row[0])] + wv[str(row[1])] for row in arr])
 
-train, val = train_test_split(classif_edges, train_size=train_size, stratify=classif_edges[:,2])
-X_train, X_val = get_X(train), get_X(val)
+    train, val = train_test_split(classif_edges, train_size=train_size, stratify=classif_edges[:,2])
+    X_train, X_val = get_X(train), get_X(val)
 
-#clf = LogisticRegression(C=1, max_iter=500)
-clf = MLPClassifier(hidden_layer_sizes=(64,32), alpha=1e-2)
-clf.fit(X_train, train[:,2])
-prediction = clf.predict(X_val)
+    #clf = LogisticRegression(C=1, max_iter=500)
+    clf = MLPClassifier(hidden_layer_sizes=(64,32), alpha=1e-2)
+    clf.fit(X_train, train[:,2])
+    prediction = clf.predict(X_val)
 
-print(f"Training F1: {f1_score(train[:,2], clf.predict(X_train))}")
-print(f"Training Accuracy: {accuracy_score(train[:,2], clf.predict(X_train))}")
+    print(f"Training F1: {f1_score(train[:,2], clf.predict(X_train))}")
+    print(f"Training Accuracy: {accuracy_score(train[:,2], clf.predict(X_train))}")
 
-print(f"Validation F1: {f1_score(val[:,2], prediction)}")
-print(f"Validation Accuracy: {accuracy_score(val[:,2], prediction)}")
+    print(f"Validation F1: {f1_score(val[:,2], prediction)}")
+    print(f"Validation Accuracy: {accuracy_score(val[:,2], prediction)}")
