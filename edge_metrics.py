@@ -74,7 +74,7 @@ if __name__ == '__main__':
             if not node_to_authors[node1].isdisjoint(node_to_authors[node2]):
                 graph.add_edge(node1, node2)
 
-        print('Loaded')
+        print('Created')
 
     for name, df in [('train', edge_df), ('test', test_edge_df)]:
         metrics = np.array([
