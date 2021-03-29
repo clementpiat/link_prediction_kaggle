@@ -18,6 +18,9 @@ ALL_NODES_FILES = ['tfidf.npy', 'n2v.npy']
 def abs_aggregator(x1, x2):
     return np.abs(x1 - x2)
 
+def concat_aggregator(x1, x2):
+    return np.concatenate((x1,x2), axis=1)
+
 def load_embeddings(emb_edges_files = ALL_EDGES_FILES, emb_nodes_files = ALL_NODES_FILES):
     _, node_information, node_to_index, edge_df, test_edge_df = load_data()
 
@@ -27,17 +30,19 @@ def load_embeddings(emb_edges_files = ALL_EDGES_FILES, emb_nodes_files = ALL_NOD
     if emb_edges_files:
         X = np.concatenate([np.load(f'emb_edges_train/{file}') for file in emb_edges_files], axis=1)
         X_test = np.concatenate([np.load(f'emb_edges_test/{file}') for file in emb_edges_files], axis=1)
+        edges_dim = X.shape[1]
 
         if not emb_nodes_files:
-            return X, X_test, y, y_test
+            return X, X_test, y, y_test, edges_dim, 0
 
     X_nodes = np.concatenate([np.load(f'emb_nodes/{file}') for file in emb_nodes_files], axis=1)
+    nodes_dim = X_nodes.shape[1]
 
     U, V = get_edges_lists(edge_df, node_information)
-    X2 = abs_aggregator(X_nodes[U], X_nodes[V])
+    X2 = concat_aggregator(X_nodes[U], X_nodes[V])
 
     U, V = get_edges_lists(test_edge_df, node_information)
-    X2_test = abs_aggregator(X_nodes[U], X_nodes[V])
+    X2_test = concat_aggregator(X_nodes[U], X_nodes[V])
 
     if not emb_edges_files:
         return X2, X2_test, y, y_test
@@ -45,7 +50,7 @@ def load_embeddings(emb_edges_files = ALL_EDGES_FILES, emb_nodes_files = ALL_NOD
     X = np.concatenate((X, X2), axis=1)
     X_test = np.concatenate((X_test, X2_test), axis=1)
  
-    return X, X_test, y, y_test
+    return X, X_test, y, y_test, edges_dim, nodes_dim
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -54,7 +59,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--classifier', type=str, default='mlp')
     args = parser.parse_args()
 
-    X, X_test, y, y_test = load_embeddings(emb_edges_files=args.emb_edges_files,
+    X, X_test, y, y_test, _, _ = load_embeddings(emb_edges_files=args.emb_edges_files,
                                            emb_nodes_files=args.emb_nodes_files)
     print('Embeddings loaded. Shape:', X.shape, '(train),', X_test.shape, '(test)') 
 
