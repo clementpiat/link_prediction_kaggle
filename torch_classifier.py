@@ -5,6 +5,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch
 import torch.nn as nn
 from sklearn.metrics import f1_score, accuracy_score
+from sklearn.preprocessing import StandardScaler
 
 from utils import load_data, get_edges_lists
 from classifier import load_embeddings
@@ -50,12 +51,15 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--emb_edges_files', nargs='*', default=ALL_EDGES_FILES)
     parser.add_argument('-n', '--emb_nodes_files', nargs='*', default=ALL_NODES_FILES)
     parser.add_argument('-b', '--batch_size', type=int, default=64)
-    parser.add_argument('-ne', '--epochs', type=int, default=10)
+    parser.add_argument('-ne', '--epochs', type=int, default=5)
     args = parser.parse_args()
 
     X, X_test, y, y_test, edges_dim, nodes_dim = load_embeddings(emb_edges_files=args.emb_edges_files,
                                                                 emb_nodes_files=args.emb_nodes_files)
     print('Embeddings loaded. Shape:', X.shape, '(train),', X_test.shape, '(test)') 
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+    X_test = scaler.transform(X_test)
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, stratify=y)
     X_train, X_val, y_train, y_val = torch.Tensor(X_train), torch.Tensor(X_val), torch.Tensor(y_train), torch.Tensor(y_val)

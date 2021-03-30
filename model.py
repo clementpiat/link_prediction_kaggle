@@ -7,7 +7,7 @@ import torch
 
 
 class Net(nn.Module):
-    def __init__(self, edges_dim, nodes_dim, edges_hidden_dim=32, nodes_hidden_dim=64):
+    def __init__(self, edges_dim, nodes_dim, edges_hidden_dim=32, nodes_hidden_dim=128):
         super(Net, self).__init__()
         self.edges_dim = edges_dim # 44
         self.nodes_dim = nodes_dim # 288
@@ -15,7 +15,9 @@ class Net(nn.Module):
         self.nodes_linear = nn.Sequential(
             nn.Linear(self.nodes_dim,  nodes_hidden_dim),
             nn.ReLU(),
-            nn.Linear(nodes_hidden_dim,  nodes_hidden_dim)
+            nn.Linear(nodes_hidden_dim,  nodes_hidden_dim//2),
+            nn.ReLU(),
+            nn.Linear(nodes_hidden_dim//2,  nodes_hidden_dim//4)
         )
         self.edges_linear = nn.Sequential(
             nn.Linear(self.edges_dim, edges_hidden_dim),

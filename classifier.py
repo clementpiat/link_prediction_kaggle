@@ -45,7 +45,7 @@ def load_embeddings(emb_edges_files = ALL_EDGES_FILES, emb_nodes_files = ALL_NOD
     X2_test = concat_aggregator(X_nodes[U], X_nodes[V])
 
     if not emb_edges_files:
-        return X2, X2_test, y, y_test
+        return X2, X2_test, y, y_test, 0, nodes_dim
 
     X = np.concatenate((X, X2), axis=1)
     X_test = np.concatenate((X_test, X2_test), axis=1)
