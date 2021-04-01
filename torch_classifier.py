@@ -11,8 +11,8 @@ from utils import load_data, get_edges_lists
 from classifier import load_embeddings
 from model import Net
 
-ALL_EDGES_FILES = ['year.npy', 'share_journal.npy', 'metrics.npy']#, 'author_metrics.npy']
-ALL_NODES_FILES = ['tfidf.npy', 'n2v.npy']
+ALL_EDGES_FILES = ['year.npy', 'share_journal.npy', 'metrics.npy', 'author__metrics.npy']
+ALL_NODES_FILES = ['tfidf.npy', 'n2v.npy', 'w2v.npy']
 
 def train_and_validate(model, train_loader,val_loader,args):
     loss_fct = nn.BCELoss()
