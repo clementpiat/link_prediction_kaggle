@@ -27,7 +27,7 @@ def perform_random_walks(graph, N, L):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--embedding_size", type=int, default=256)
+    parser.add_argument("-e", "--embedding_size", type=int, default=128)
     parser.add_argument("-wl", "--walk_length", type=int, default=10)
     parser.add_argument("-n", "--num_walks", type=int, default=20)
     parser.add_argument("-win", "--window_size", type=int, default=5)

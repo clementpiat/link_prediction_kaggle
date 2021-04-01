@@ -11,12 +11,12 @@ from utils import load_data, get_edges_lists
 from classifier import load_embeddings
 from model import Net
 
-ALL_EDGES_FILES = ['year.npy', 'share_journal.npy', 'metrics.npy', 'author_metrics.npy']
+ALL_EDGES_FILES = ['year.npy', 'share_journal.npy', 'metrics.npy']#, 'author_metrics.npy']
 ALL_NODES_FILES = ['tfidf.npy', 'n2v.npy']
 
 def train_and_validate(model, train_loader,val_loader,args):
     loss_fct = nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=5e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=5e-5, weight_decay=0.05)
 
     for e in range(args.epochs):
         losses = 0
@@ -33,17 +33,17 @@ def train_and_validate(model, train_loader,val_loader,args):
         
         print(f"Epoch {e+1}: {losses}")
 
-    labels = []
-    predictions = []
-    for data in val_loader:
-        x,y = data
-        outputs = model(x)
+        labels = []
+        predictions = []
+        for data in val_loader:
+            x,y = data
+            outputs = model(x)
 
-        labels.extend(y.detach().numpy())
-        predictions.extend(outputs.detach().numpy())
+            labels.extend(y.detach().numpy())
+            predictions.extend(outputs.detach().numpy())
 
-    print(f"Validation F1: {f1_score(labels, np.round(predictions))}")
-    print(f"Validation Accuracy: {accuracy_score(labels, np.round(predictions))}")
+        print(f"Validation F1: {f1_score(labels, np.round(predictions))}")
+        print(f"Validation Accuracy: {accuracy_score(labels, np.round(predictions))}")
 
 
 if __name__ == '__main__':
@@ -61,7 +61,11 @@ if __name__ == '__main__':
     X = scaler.fit_transform(X)
     X_test = scaler.transform(X_test)
 
-    X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, stratify=y)
+    # X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, stratify=y)
+    validation_split = np.load("validation_split.npy")
+    X_train, y_train = X[validation_split], y[validation_split]
+    X_val, y_val = X[np.logical_not(validation_split)], y[np.logical_not(validation_split)]
+
     X_train, X_val, y_train, y_val = torch.Tensor(X_train), torch.Tensor(X_val), torch.Tensor(y_train), torch.Tensor(y_val)
 
     train_dataset = TensorDataset(X_train, y_train)

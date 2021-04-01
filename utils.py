@@ -22,17 +22,21 @@ def load_data():
     node_information = load_node_information()
     edge_df = pd.read_csv("training_set.txt", sep=" ", header=None, names=["source", "target", "label"])
     test_edge_df = pd.read_csv("testing_set.txt", sep=" ", header=None, names=["source", "target", "label"])
+    validation_split = np.load("validation_split.npy")
 
     graph = nx.Graph()
 
     for node in node_information.node:
         graph.add_edge(node, node)
-    
-    for source, target in zip(edge_df.source.values, edge_df.target.values):
-        graph.add_edge(source, target)
+
+    train_edge_df = edge_df[validation_split]
+    for source, target, label in zip(train_edge_df.source.values, train_edge_df.target.values, train_edge_df.label.values):
+        if label:
+            graph.add_edge(source, target)
 
     node_to_index = {node: i for i, node in enumerate(node_information.node.values)}
 
     print(f"Loaded graph: {len(graph.nodes())} nodes, {len(graph.edges())} edges")
+    print(f"Number of connected components: {nx.number_connected_components(graph)}")
 
     return graph, node_information, node_to_index, edge_df, test_edge_df

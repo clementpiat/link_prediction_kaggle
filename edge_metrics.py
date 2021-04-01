@@ -35,9 +35,9 @@ def preferential_attachment(graph, n1, n2):
 
 def shortest_path(graph, n1, n2):
     try:
-        return - (len(nx.shortest_path(graph, source=n1, target=n2)) - 2)
+        return nx.shortest_path_length(graph, source=n1, target=n2)
     except:
-        return - 100
+        return 100
 
 def katzb(graph, n1, n2):
     pass
