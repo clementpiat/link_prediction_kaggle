@@ -35,7 +35,7 @@ def train_and_validate(model, train_loader,val_loader,args):
 
     labels = []
     predictions = []
-    for data in train_loader:
+    for data in val_loader:
         x,y = data
         outputs = model(x)
 
