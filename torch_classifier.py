@@ -6,6 +6,9 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.preprocessing import StandardScaler
+import os
+from time import time
+import pandas as pd
 
 from utils import load_data, get_edges_lists
 from classifier import load_embeddings
@@ -83,3 +86,18 @@ if __name__ == '__main__':
     model = Net(edges_dim, nodes_dim)
     print('Starting training...')
     train_and_validate(model, train_loader,val_loader,args)
+
+    print('Computing test predictions...')
+    test_dataset = TensorDataset(torch.tensor(X_test, dtype=torch.float32))
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+
+    predictions = []
+    for x in test_loader:
+        outputs = model(x[0])
+        predictions.extend(outputs.detach().numpy())
+    predictions = np.array(predictions).round()
+
+    file_path = os.path.join('submissions', f"{time()}.csv")
+    ids, categories = list(range(len(X_test))), list(map(int, predictions.tolist()))
+    pd.DataFrame(data={'id': ids, 'category': categories}).to_csv(file_path, index=False)
+    print(f"\nSubmission saved at {file_path}")
