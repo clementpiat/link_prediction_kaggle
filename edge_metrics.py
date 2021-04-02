@@ -37,7 +37,7 @@ def shortest_path(graph, n1, n2):
     try:
         return nx.shortest_path_length(graph, source=n1, target=n2)
     except:
-        return 100
+        return 15
 
 def katzb(graph, n1, n2):
     pass
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         metrics = np.array([
             all_metrics(graph, node1, node2) for node1, node2 in tqdm(list(zip(df.source.values, df.target.values)))])
 
-        with open(f'emb_edges_{name}/{"author_" if args.author else ""}_metrics.npy', 'wb') as f:
+        with open(f'emb_edges_{name}/{"author_" if args.author else ""}metrics.npy', 'wb') as f:
             np.save(f, metrics)
 
 '''

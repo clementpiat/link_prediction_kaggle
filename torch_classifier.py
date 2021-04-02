@@ -11,18 +11,22 @@ from utils import load_data, get_edges_lists
 from classifier import load_embeddings
 from model import Net
 
-ALL_EDGES_FILES = ['year.npy', 'share_journal.npy', 'metrics.npy', 'author__metrics.npy']
+ALL_EDGES_FILES = ['year.npy', 'share_journal.npy', 'metrics.npy', 'author_metrics.npy']
 ALL_NODES_FILES = ['tfidf.npy', 'n2v.npy', 'w2v.npy']
 
 def train_and_validate(model, train_loader,val_loader,args):
     loss_fct = nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=5e-5, weight_decay=0.05)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=0.05)
 
     for e in range(args.epochs):
         losses = 0
+        predictions, labels = [], []
         for data in train_loader:
             x,y = data
             outputs = model(x)
+
+            labels.extend(y.detach().numpy())
+            predictions.extend(outputs.detach().numpy())
             
             optimizer.zero_grad()
             loss = loss_fct(outputs, y)
@@ -31,7 +35,9 @@ def train_and_validate(model, train_loader,val_loader,args):
 
             losses += loss.item()
         
-        print(f"Epoch {e+1}: {losses}")
+        print(f"\n> Epoch {e+1}: {losses}")
+        print(f"Training F1: {f1_score(labels, np.round(predictions))}")
+        print(f"Training Accuracy: {accuracy_score(labels, np.round(predictions))}")
 
         labels = []
         predictions = []
