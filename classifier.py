@@ -3,7 +3,7 @@ import pandas as pd
 from time import time
 import os
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score, accuracy_score
+from sklearn.metrics import f1_score, accuracy_score, fbeta_score
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -21,7 +21,10 @@ def abs_aggregator(x1, x2):
 def concat_aggregator(x1, x2):
     return np.concatenate((x1,x2), axis=1)
 
-def load_embeddings(emb_edges_files = ALL_EDGES_FILES, emb_nodes_files = ALL_NODES_FILES):
+def full_aggregator(x1, x2):
+    return np.concatenate((x1,x2, np.abs(x1 - x2)), axis=1)
+
+def load_embeddings(emb_edges_files = ALL_EDGES_FILES, emb_nodes_files = ALL_NODES_FILES, aggregator=concat_aggregator):
     _, node_information, node_to_index, edge_df, test_edge_df = load_data()
 
     y = edge_df.label.values
@@ -39,10 +42,10 @@ def load_embeddings(emb_edges_files = ALL_EDGES_FILES, emb_nodes_files = ALL_NOD
     nodes_dim = X_nodes.shape[1]
 
     U, V = get_edges_lists(edge_df, node_information)
-    X2 = concat_aggregator(X_nodes[U], X_nodes[V])
+    X2 = aggregator(X_nodes[U], X_nodes[V])
 
     U, V = get_edges_lists(test_edge_df, node_information)
-    X2_test = concat_aggregator(X_nodes[U], X_nodes[V])
+    X2_test = aggregator(X_nodes[U], X_nodes[V])
 
     if not emb_edges_files:
         return X2, X2_test, y, y_test, 0, nodes_dim
@@ -60,15 +63,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     X, X_test, y, y_test, _, _ = load_embeddings(emb_edges_files=args.emb_edges_files,
-                                           emb_nodes_files=args.emb_nodes_files)
+                                           emb_nodes_files=args.emb_nodes_files, aggregator=full_aggregator)
     print('Embeddings loaded. Shape:', X.shape, '(train),', X_test.shape, '(test)') 
 
-    X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, stratify=y)
+    validation_split = np.load("validation_split.npy")
+    X_train, y_train = X[validation_split], y[validation_split]
+    X_val, y_val = X[np.logical_not(validation_split)], y[np.logical_not(validation_split)]
 
     print('Starting training...')
 
     if args.classifier == 'mlp':
-        clf = make_pipeline(StandardScaler(), MLPClassifier(hidden_layer_sizes=(64,32), learning_rate_init=5e-5, verbose=True, tol=3e-3))
+        clf = make_pipeline(StandardScaler(), MLPClassifier(hidden_layer_sizes=(64,32), max_iter=1, learning_rate_init=5e-5, verbose=True, tol=3e-3))
     elif args.classifier == 'svc':
         clf = make_pipeline(StandardScaler(), SVC(gamma='auto', verbose=True))
     else:
@@ -79,9 +84,11 @@ if __name__ == '__main__':
 
     print(f"Training F1: {f1_score(y_train, clf.predict(X_train))}")
     print(f"Training Accuracy: {accuracy_score(y_train, clf.predict(X_train))}")
+    print(f"Training fbeta_score: {fbeta_score(y_train, clf.predict(X_train), beta=0.5)}")
 
     print(f"Validation F1: {f1_score(y_val, y_pred)}")
     print(f"Validation Accuracy: {accuracy_score(y_val, y_pred)}")
+    print(f"Validation fbeta_score: {fbeta_score(y_val, y_pred, beta=0.5)}")
 
     file_path = os.path.join('submissions', f"{time()}.csv")
     ids, categories = list(range(len(X_test))), clf.predict(X_test).tolist()
