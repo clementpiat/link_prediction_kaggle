@@ -9,6 +9,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 import argparse
+from xgboost import XGBClassifier
+from sklearn.decomposition import PCA
 
 from utils import load_data, get_edges_lists
 
@@ -60,6 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--emb_edges_files', nargs='*', default=ALL_EDGES_FILES)
     parser.add_argument('-n', '--emb_nodes_files', nargs='*', default=ALL_NODES_FILES)
     parser.add_argument('-c', '--classifier', type=str, default='mlp')
+    parser.add_argument('-k', '--k', type=int, default=1e10)
     args = parser.parse_args()
 
     X, X_test, y, y_test, _, _ = load_embeddings(emb_edges_files=args.emb_edges_files,
@@ -67,7 +70,7 @@ if __name__ == '__main__':
     print('Embeddings loaded. Shape:', X.shape, '(train),', X_test.shape, '(test)') 
 
     validation_split = np.load("validation_split.npy")
-    X_train, y_train = X[validation_split], y[validation_split]
+    X_train, y_train = X[validation_split][:args.k], y[validation_split][:args.k]
     X_val, y_val = X[np.logical_not(validation_split)], y[np.logical_not(validation_split)]
 
     print('Starting training...')
@@ -76,6 +79,8 @@ if __name__ == '__main__':
         clf = make_pipeline(StandardScaler(), MLPClassifier(hidden_layer_sizes=(64,32), max_iter=1, learning_rate_init=5e-5, verbose=True, tol=3e-3))
     elif args.classifier == 'svc':
         clf = make_pipeline(StandardScaler(), SVC(gamma='auto', verbose=True))
+    elif args.classifier == 'xgb':
+        clf = make_pipeline(StandardScaler(), XGBClassifier(silent=0))
     else:
         raise ValueError(f"Invalid classifier name. Found {args.classifier}.")
 
