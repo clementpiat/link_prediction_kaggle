@@ -33,11 +33,16 @@ def adamic_adar(graph, n1, n2):
 def preferential_attachment(graph, n1, n2):
     return graph.degree(n1) * graph.degree(n2)
 
-def shortest_path(graph, n1, n2):
+def shortest_path(graph, n1, n2, default=15):
     try:
-        return nx.shortest_path_length(graph, source=n1, target=n2)
+        paths = nx.shortest_simple_paths(graph, n1, n2)
+        for p in paths:
+            n = len(p)
+            if n > 2:
+                return n
+        return default
     except:
-        return 15
+        return default 
 
 def katzb(graph, n1, n2):
     pass
