@@ -62,7 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--emb_edges_files', nargs='*', default=ALL_EDGES_FILES)
     parser.add_argument('-n', '--emb_nodes_files', nargs='*', default=ALL_NODES_FILES)
     parser.add_argument('-c', '--classifier', type=str, default='mlp')
-    parser.add_argument('-k', '--k', type=int, default=1e10)
+    parser.add_argument('-k', '--k', type=int, default=int(1e10))
     args = parser.parse_args()
 
     X, X_test, y, y_test, _, _ = load_embeddings(emb_edges_files=args.emb_edges_files,
