@@ -80,11 +80,14 @@ if __name__ == '__main__':
     elif args.classifier == 'svc':
         clf = make_pipeline(StandardScaler(), SVC(gamma='auto', verbose=True))
     elif args.classifier == 'xgb':
-        clf = make_pipeline(StandardScaler(), XGBClassifier(silent=0))
+        clf = XGBClassifier()
     else:
         raise ValueError(f"Invalid classifier name. Found {args.classifier}.")
 
-    clf.fit(X_train, y_train)
+    if args.classifier == 'xgb':
+        clf.fit(X_train, y_train, eval_metric="error", eval_set=[(X_val, y_val)])
+    else:
+        clf.fit(X_train, y_train)
     y_pred = clf.predict(X_val)
 
     print(f"Training F1: {f1_score(y_train, clf.predict(X_train))}")
