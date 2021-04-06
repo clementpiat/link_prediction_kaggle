@@ -55,9 +55,9 @@ def all_metrics(graph, n1, n2):
     return [
         common_neighbors(graph, n1, n2),
         jaccard_coefficient(graph, n1, n2),
-        #adamic_adar(graph, n1, n2),
-        #preferential_attachment(graph, n1, n2),
-        #shortest_path(graph, n1, n2)
+        adamic_adar(graph, n1, n2),
+        preferential_attachment(graph, n1, n2),
+        shortest_path(graph, n1, n2)
     ]
 
 if __name__ == '__main__':
