@@ -31,17 +31,18 @@ if __name__ == '__main__':
     parser.add_argument("-wl", "--walk_length", type=int, default=10)
     parser.add_argument("-n", "--num_walks", type=int, default=20)
     parser.add_argument("-win", "--window_size", type=int, default=5)
+    parser.add_argument("-c", "--cut", type=float, default=0)
     args = parser.parse_args()
     
-    graph, *_ = load_data()
+    graph, *_ = load_data(cut=args.cut)
 
     # Perform random walks - call function
     walks = perform_random_walks(graph, args.num_walks, args.walk_length)
     # Learn representations of nodes - use Word2Vec
-    model = Word2Vec(walks, size=args.embedding_size, window=args.window_size, workers=4, min_count=1)
+    model = Word2Vec(walks, vector_size=args.embedding_size, window=args.window_size, workers=4, min_count=1)
     # Save the embedding vectors
-    assert len(model.wv.vocab) == 27770
+    # assert len(model.wv.vocab) == 27770
 
 
-    np.save('emb_nodes/w2v.npy', [model.wv[str(node)] for node in graph.nodes()])
+    np.save(f'emb_nodes/w2v_{args.embedding_size}_{args.cut}.npy', [model.wv[str(node)] for node in graph.nodes()])
     
