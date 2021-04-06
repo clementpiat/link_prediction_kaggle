@@ -15,7 +15,7 @@ from sklearn.decomposition import PCA
 from utils import load_data, get_edges_lists
 
 ALL_EDGES_FILES = ['year.npy', 'share_journal.npy', 'metrics.npy', 'author_metrics.npy']
-ALL_NODES_FILES = ['tfidf.npy', 'w2v']
+ALL_NODES_FILES = ['tfidf.npy', 'w2v.npy']
 
 def abs_aggregator(x1, x2):
     return np.abs(x1 - x2)

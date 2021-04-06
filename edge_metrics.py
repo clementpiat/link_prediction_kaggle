@@ -54,15 +54,17 @@ def all_metrics(graph, n1, n2):
     return [
         common_neighbors(graph, n1, n2),
         jaccard_coefficient(graph, n1, n2),
-        adamic_adar(graph, n1, n2),
-        preferential_attachment(graph, n1, n2),
-        shortest_path(graph, n1, n2)
+        #adamic_adar(graph, n1, n2),
+        #preferential_attachment(graph, n1, n2),
+        #shortest_path(graph, n1, n2)
     ]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-a", "--author", type=bool, default=False, const=True, nargs="?",
         help="use common author graph")
+    parser.add_argument("-k", "--katz", type=bool, default=False, const=True, nargs="?",
+        help="use katz metric")
     args = parser.parse_args()
 
     graph, node_information, node_to_index, edge_df, test_edge_df = load_data()
@@ -81,9 +83,27 @@ if __name__ == '__main__':
 
         print('Created')
 
+    if args.katz:
+        print('Starting katz')
+        A = nx.adjacency_matrix(graph)
+        beta = 0.8
+
+        X = beta*A
+        k, A_ = 2, A
+        while beta**k > 0.35:
+            print('k:', k)
+            A_ = A_ @ A
+            X += (beta**k)*A_
+            k += 1
+
     for name, df in [('train', edge_df), ('test', test_edge_df)]:
         metrics = np.array([
             all_metrics(graph, node1, node2) for node1, node2 in tqdm(list(zip(df.source.values, df.target.values)))])
+
+
+        if args.katz:
+            katz = np.array([ X[node_to_index[node1],node_to_index[node2]] for node1, node2 in tqdm(list(zip(df.source.values, df.target.values))) ])
+            metrics = np.concatenate((metrics, katz[:,None]), axis=1)
 
         with open(f'emb_edges_{name}/{"author_" if args.author else ""}metrics.npy', 'wb') as f:
             np.save(f, metrics)
