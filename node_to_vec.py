@@ -12,12 +12,13 @@ if __name__ == '__main__':
     parser.add_argument("-win", "--window", type=int, default=6)
     parser.add_argument("-bw", "--batch_words", type=int, default=4)
     parser.add_argument("-mc", "--min_count", type=int, default=1)
+    parser.add_argument("-c", "--cut", type=float, default=0)
     args = parser.parse_args()
     
-    graph, *_ = load_data()
+    graph, *_ = load_data(cut=args.cut)
 
     node2vec = Node2Vec(graph, dimensions=args.dimensions, walk_length=args.walk_length, num_walks=args.num_walks, p=1, q=1)
     model = node2vec.fit(window=args.window, min_count=args.min_count, batch_words=args.batch_words)
 
-    np.save('emb_nodes/n2v.npy', [model.wv[str(node)] for node in graph.nodes()])
+    np.save(f'emb_nodes/n2v_{args.dimensions}_{args.cut}.npy', [model.wv[str(node)] for node in graph.nodes()])
     

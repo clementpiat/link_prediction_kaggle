@@ -15,7 +15,7 @@ from sklearn.decomposition import PCA
 from utils import load_data, get_edges_lists
 
 ALL_EDGES_FILES = ['year.npy', 'share_journal.npy', 'metrics.npy', 'author_metrics.npy']
-ALL_NODES_FILES = ['tfidf.npy', 'w2v.npy']
+ALL_NODES_FILES = ['tfidf.npy', 'w2v_32_0.5.npy']
 
 def abs_aggregator(x1, x2):
     return np.abs(x1 - x2)
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     print('Starting training...')
 
     if args.classifier == 'mlp':
-        clf = make_pipeline(StandardScaler(), MLPClassifier(hidden_layer_sizes=(64,32), max_iter=10, learning_rate_init=1e-4, verbose=True, tol=3e-3, alpha=1))
+        clf = make_pipeline(StandardScaler(), MLPClassifier(hidden_layer_sizes=(64,32), max_iter=20, learning_rate_init=1e-4, verbose=True, tol=3e-3, alpha=1))
     elif args.classifier == 'svc':
         clf = make_pipeline(StandardScaler(), SVC(gamma='auto', verbose=True))
     elif args.classifier == 'xgb':

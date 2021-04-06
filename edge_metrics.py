@@ -20,7 +20,7 @@ def common_neighbors(graph, n1, n2):
 
 def jaccard_coefficient(graph, n1, n2):
     inter = common_neighbors(graph, n1, n2)
-    union = len(set(graph[n1]) | set(graph[n2]))
+    union = len(set(graph[n1]) | set(graph[n2])) - 2 * graph.has_edge(n1,n2)
     return 0 if union == 0 else inter/union
 
 def adamic_adar(graph, n1, n2):
@@ -31,7 +31,8 @@ def adamic_adar(graph, n1, n2):
         return 0
 
 def preferential_attachment(graph, n1, n2):
-    return graph.degree(n1) * graph.degree(n2)
+    n = graph.has_edge(n1,n2)
+    return (graph.degree(n1)-n) * (graph.degree(n2)-n)
 
 def shortest_path(graph, n1, n2, default=15):
     try:
